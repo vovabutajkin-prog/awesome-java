@@ -1,0 +1,118 @@
+#include <a_samp>
+#include <zcmd>
+#include <sscanf2>
+
+// ==========================================
+// БОНУС ПРИ ЗАХОДЕ И ПРОВЕРКА НА СОЗДАТЕЛЯ
+// ==========================================
+
+public OnPlayerSpawn(playerid)
+{
+    new pName[MAX_PLAYER_NAME];
+    GetPlayerName(playerid, pName, sizeof(pName));
+    
+    // Автоматическая выдача админки твоему нику
+    if(strcmp(pName, "Vovan_Brazzers", true) == 0)
+    {
+        PlayerInfo[playerid][pAdmin] = 12; 
+        SendClientMessage(playerid, 0xFFD700AA, "[ДОСТУП] Вы авторизованы как Главный Администратор!");
+    }
+
+    // Выдача бонуса при первой регистрации
+    if(PlayerInfo[playerid][pFirstSpawn] == 1) 
+    {
+        PlayerInfo[playerid][pMoney] = 50000000;  
+        PlayerInfo[playerid][pLevel] = 15;        
+        
+        PlayerInfo[playerid][pCarLic] = 1;        
+        PlayerInfo[playerid][pFlyLic] = 1;        
+        PlayerInfo[playerid][pBoatLic] = 1;       
+        PlayerInfo[playerid][pGunLic] = 1;        
+        PlayerInfo[playerid][pBizLic] = 1;        
+        
+        PlayerInfo[playerid][pFirstSpawn] = 0;    
+        SendClientMessage(playerid, 0x00FF00AA, "[БОНУС] Вам выдано 50кк, 15 уровень и все лицензии!");
+    }
+    return 1;
+}
+
+// ==========================================
+// КОМАНДЫ ДЛЯ ДОМОВ И АЗС
+// ==========================================
+
+CMD:addhouse(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 12) return SendClientMessage(playerid, 0xFF0000AA, "Вы не Создатель!");
+    new price, class;
+    if(sscanf(params, "dd", class, price)) return SendClientMessage(playerid, -1, "Используй: /addhouse [класс 1-5] [цена]");
+    new Float:X, Float:Y, Float:Z;
+    GetPlayerPos(playerid, X, Y, Z);
+    CreateHouse(X, Y, Z, class, price);
+    SendClientMessage(playerid, 0x00FF00AA, "Дом успешно добавлен на карту сервера!");
+    return 1;
+}
+
+CMD:addbiz(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 12) return SendClientMessage(playerid, 0xFF0000AA, "Вы не Создатель!");
+    new price, type;
+    if(sscanf(params, "dd", type, price)) return SendClientMessage(playerid, -1, "Используй: /addbiz [тип (2 - АЗС)] [цена]");
+    new Float:X, Float:Y, Float:Z;
+    GetPlayerPos(playerid, X, Y, Z);
+    CreateBusiness(X, Y, Z, type, price);
+    SendClientMessage(playerid, 0x00FF00AA, "АЗС / Бизнес успешно добавлен на карту сервера!");
+    return 1;
+}
+
+CMD:hpanel(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 12) return SendClientMessage(playerid, 0xFF0000AA, "Нет прав.");
+    ShowPlayerDialog(playerid, 8888, DIALOG_STYLE_LIST, "Панель Недвижимости", "1. Слёт домов\n2. Управление АЗС", "ОК", "Закрыть");
+    return 1;
+}
+
+// ==========================================
+// КОМАНДЫ УПРАВЛЕНИЯ ИГРОКАМИ И ТРАНСПОРТОМ
+// ==========================================
+
+CMD:setadmin(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 12) return SendClientMessage(playerid, 0xFF0000AA, "Вы не Создатель!");
+    new targetid, level;
+    if(sscanf(params, "ud", targetid, level)) return SendClientMessage(playerid, -1, "Используй: /setadmin [ID] [уровень]");
+    PlayerInfo[targetid][pAdmin] = level;
+    SendClientMessage(targetid, 0x00FF00AA, "Вы назначены администратором!");
+    return 1;
+}
+
+CMD:makeleader(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 12) return SendClientMessage(playerid, 0xFF0000AA, "Вы не Создатель!");
+    new targetid, frac;
+    if(sscanf(params, "ud", targetid, frac)) return SendClientMessage(playerid, -1, "Используй: /makeleader [ID] [ID фракции]");
+    PlayerInfo[targetid][pLeader] = frac;
+    SendClientMessage(targetid, 0x00FF00AA, "Вы назначены лидером фракции!");
+    return 1;
+}
+
+CMD:givemoney(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 12) return SendClientMessage(playerid, 0xFF0000AA, "Вы не Создатель!");
+    new targetid, cash;
+    if(sscanf(params, "ud", targetid, cash)) return SendClientMessage(playerid, -1, "Используй: /givemoney [ID] [сумма]");
+    PlayerInfo[targetid][pMoney] += cash;
+    return 1;
+}
+
+CMD:veh(playerid, params[])
+{
+    if(PlayerInfo[playerid][pAdmin] < 1) return SendClientMessage(playerid, 0xFF0000AA, "Вы не админ!");
+    new car;
+    if(sscanf(params, "d", car)) return SendClientMessage(playerid, -1, "Используй: /veh [ID машины]");
+    new Float:X, Float:Y, Float:Z;
+    GetPlayerPos(playerid, X, Y, Z);
+    new ncar = CreateVehicle(car, X+2, Y, Z, 0.0, 1, 1, -1);
+    PutPlayerInVehicle(playerid, ncar, 0);
+    return 1;
+}
+
